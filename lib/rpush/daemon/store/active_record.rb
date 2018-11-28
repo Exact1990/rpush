@@ -138,6 +138,7 @@ module Rpush
             feedback.device_token = device_token
             feedback.app_id = app.id
             feedback.save!
+            feedback
           end
         end
 
