@@ -117,15 +117,24 @@ module Rpush
       end
 
       def enqueue(notifications)
+        if ENV['DETAIL_LOGGER']
+          Rpush.logger.info("enqueue #{notifications.map(&:id)}") 
+        end
         if service.batch_deliveries?
           batch_size = (notifications.size / num_dispatcher_loops.to_f).ceil
           notifications.in_groups_of(batch_size, false).each do |batch_notifications|
             batch = Batch.new(batch_notifications)
+            if ENV['DETAIL_LOGGER']
+              Rpush.logger.info("queue push (1)}") 
+            end
             queue.push(QueuePayload.new(batch))
           end
         else
           batch = Batch.new(notifications)
           notifications.each do |notification|
+            if ENV['DETAIL_LOGGER']
+              Rpush.logger.info("queue push (2)}") 
+            end
             queue.push(QueuePayload.new(batch, notification))
             reflect(:notification_enqueued, notification)
           end

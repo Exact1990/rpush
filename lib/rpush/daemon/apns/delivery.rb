@@ -9,9 +9,18 @@ module Rpush
         end
 
         def perform
+          if ENV['DETAIL_LOGGER']
+            Rpush.logger.info("perform ios notifications") 
+          end
           @connection.write(batch_to_binary)
+          if ENV['DETAIL_LOGGER']
+            Rpush.logger.info("write notifications") 
+          end
           mark_batch_delivered
           describe_deliveries
+          if ENV['DETAIL_LOGGER']
+            Rpush.logger.info("finish perform ios notifications") 
+          end
         rescue Rpush::Daemon::TcpConnectionError => error
           mark_batch_retryable(Time.now + 10.seconds, error)
           raise
