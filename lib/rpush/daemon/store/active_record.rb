@@ -37,7 +37,7 @@ module Rpush
               relation = relation.limit(limit)
               ids = relation.lock(true).ids
               if ENV['DETAIL_LOGGER']
-                Rpush.logger.info("notifications: #{ids)}") 
+                Rpush.logger.info("notifications: #{ids}") 
               end
               unless ids.empty?
                 relation = Rpush::Client::ActiveRecord::Notification.where(id: ids)
