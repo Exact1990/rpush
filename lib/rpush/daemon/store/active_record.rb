@@ -28,14 +28,31 @@ module Rpush
         end
 
         def deliverable_notifications(limit)
+          if ENV['DETAIL_LOGGER']
+            Rpush.logger.info("GET start deliverable_notifications") 
+          end
           with_database_reconnect_and_retry do
-            Rpush::Client::ActiveRecord::Notification.transaction do
+            notifications = Rpush::Client::ActiveRecord::Notification.transaction do
               relation = ready_for_delivery
               relation = relation.limit(limit)
-              notifications = claim(relation)
-              mark_processing(notifications)
-              notifications
+              ids = relation.lock(true).ids
+              if ENV['DETAIL_LOGGER']
+                Rpush.logger.info("notifications: #{ids)}") 
+              end
+              unless ids.empty?
+                relation = Rpush::Client::ActiveRecord::Notification.where(id: ids)
+                # mark processing
+                relation.update_all(processing: true, updated_at: Time.now)
+                relation
+              else
+                []
+              end
             end
+            result = notifications.to_a
+            if ENV['DETAIL_LOGGER']
+              Rpush.logger.info("finish notifications") 
+            end
+            result
           end
         end
 
@@ -194,7 +211,7 @@ module Rpush
 
         def ready_for_delivery
           relation = Rpush::Client::ActiveRecord::Notification.where('processing = ? AND delivered = ? AND failed = ? AND (deliver_after IS NULL OR deliver_after < ?)', false, false, false, Time.now)
-          @using_oracle ? relation : relation.order('created_at ASC')
+          relation.order('deliver_after ASC, created_at ASC')
         end
 
         def mark_processing(notifications)

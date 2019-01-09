@@ -18,13 +18,7 @@ module Rpush
         end
 
         def perform
-          if ENV['DETAIL_LOGGER']
-            Rpush.logger.info("perform android notification #{@notification.id}") 
-          end
           handle_response(do_post)
-          if ENV['DETAIL_LOGGER']
-            Rpush.logger.info("finish perform android notification #{@notification.id}") 
-          end
         rescue SocketError => error
           mark_retryable(@notification, Time.now + 10.seconds, error)
           raise

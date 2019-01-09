@@ -45,9 +45,6 @@ module Rpush
 
       def self.feed_forever
         loop do
-          if ENV['DETAIL_LOGGER']
-            Rpush.logger.info("feed_forever") 
-          end
           enqueue_notifications
           interruptible_sleeper.sleep(Rpush.config.push_poll)
           return if should_stop
@@ -57,9 +54,6 @@ module Rpush
       def self.enqueue_notifications
         batch_size = Rpush.config.batch_size - Rpush::Daemon::AppRunner.total_queued
         return if batch_size <= 0
-        if ENV['DETAIL_LOGGER']
-          Rpush.logger.info("enqueue_notifications") 
-        end
         notifications = Rpush::Daemon.store.deliverable_notifications(batch_size)
         Rpush::Daemon::AppRunner.enqueue(notifications)
       rescue StandardError => e
