@@ -35,7 +35,7 @@ module Rpush
             notifications = Rpush::Client::ActiveRecord::Notification.transaction do
               relation = ready_for_delivery
               relation = relation.limit(limit)
-              ids = relation.lock(true).ids
+              ids = relation.lock(true).pluck(:id)
               if ENV['DETAIL_LOGGER']
                 Rpush.logger.info("notifications: #{ids}") 
               end
